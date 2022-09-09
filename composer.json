@@ -12,11 +12,13 @@
         "laravel/tinker": "^2.7"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^2.12",
         "fakerphp/faker": "^1.20",
         "laravel/pint": "^1.1",
         "laravel/sail": "^1.16",
         "mockery/mockery": "^1.5",
         "nunomaduro/collision": "^6.3",
+        "nunomaduro/larastan": "^2.2",
         "phpunit/phpunit": "^9.5",
         "spatie/laravel-ignition": "^1.4"
     },
@@ -38,13 +40,24 @@
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+            "@php artisan ide-helper:generate",
+            "@php artisan ide-helper:meta"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "generate": [
+            "@php artisan ide-helper:models"
+        ],
+        "stan": [
+            "./vendor/bin/phpstan analyse"
+        ],
+        "pint": [
+            "./vendor/bin/pint"
         ]
     },
     "extra": {
