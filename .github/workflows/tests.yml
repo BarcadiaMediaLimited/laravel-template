@@ -1,0 +1,64 @@
+name: tests
+
+on:
+  push:
+    paths:
+      - '**.php'
+      - 'phpunit.xml'
+      - '.github/workflows/tests.yml'
+      - 'composer.lock'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+
+    env:
+      extensions: dom,curl,libxml,mbstring,zip,pcntl,pdo,sqlite,pdo_sqlite,bcmath,soap,intl,gb,exif,iconv,imagick
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Cache Environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: '8.1'
+          extensions: ${{env.extensions}}
+          key: extensions-${{ hashFiles('composer.lock') }}
+
+      - name: Cache extensions
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: ${{env.extensions}}
+          coverage: none
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Run composer install
+        run: composer install -n --prefer-dist
+
+      - name: Prepare Laravel Application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run Test Suite
+        run: ./vendor/bin/pest --parallel
+        env:
+          DB_PASSWORD: root
